@@ -1,4 +1,4 @@
-package com.dante.maven.enforcer.rule;
+package com.miked.maven.enforcer.rule;
 
 import java.io.File;
 import java.io.FileInputStream;
