@@ -13,6 +13,11 @@ To Install :
 Example Usage:
 
 ```
+<properties>
+	<!-- The rule uses this property to validate file encodings against -->
+	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+</properties>
+
 <build>
 	<plugins>
 		<plugin>
