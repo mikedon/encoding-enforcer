@@ -2,6 +2,12 @@ Encode Enforcer
 
 Maven Enforcer Plugin custom rule for enforcing file encodings.
 
+To Install :
+
+git pull https://github.com/mikedon/encoding-enforcer.git
+cd encoding-enforcer
+mvn clean install
+
 Example Usage:
 
 ```
