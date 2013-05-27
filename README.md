@@ -4,13 +4,20 @@ Maven Enforcer Plugin custom rule for enforcing file encodings.
 
 To Install :
 
-git pull https://github.com/mikedon/encoding-enforcer.git
-cd encoding-enforcer
-mvn clean install
+1.  git pull https://github.com/mikedon/encoding-enforcer.git
+
+2.  cd encoding-enforcer
+
+3.  mvn clean install
 
 Example Usage:
 
 ```
+<properties>
+	<!-- The rule uses this property to validate file encodings against -->
+	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+</properties>
+
 <build>
 	<plugins>
 		<plugin>
