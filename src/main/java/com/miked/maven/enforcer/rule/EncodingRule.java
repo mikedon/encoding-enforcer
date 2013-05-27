@@ -33,31 +33,39 @@ public class EncodingRule implements EnforcerRule {
 	 */
 	private String includes = "";
 
+	/**
+	 * Validate files match this encoding. If not specified then default to
+	 * ${project.builder.sourceEncoding}.
+	 */
+	private String encoding = "";
+
 	public void execute(EnforcerRuleHelper helper) throws EnforcerRuleException {
 		try {
-			String encoding = (String) helper
-					.evaluate("${project.build.sourceEncoding}");
+			if (this.getEncoding() == null) {
+				this.setEncoding((String) helper
+					.evaluate("${project.build.sourceEncoding}"));
+			}
 
 			String target = (String) helper.evaluate("${basedir}");
-			System.out.println(target);
-			File dir = new File(target + "/" + directory);
+			File dir = new File(target + System.getProperty("file.separator")
+					+ getDirectory());
 			File[] files = dir.listFiles(new FilenameFilter() {
 				public boolean accept(File dir, String name) {
-					return name.matches(includes);
+					return name.matches(getIncludes());
 				}
 			});
 			Map<String, String> filesInError = new HashMap<String, String>();
 			String fileEncoding = null;
 			for (File file : files) {
 				fileEncoding = getEncoding(file);
-				if (fileEncoding != null && !fileEncoding.equals(encoding)) {
+				if (fileEncoding != null && !fileEncoding.equals(getEncoding())) {
 					filesInError.put(file.getName(), fileEncoding);
 				}
 			}
 			if (!filesInError.isEmpty()) {
 				StringBuilder builder = new StringBuilder();
 				builder.append("Files not encoded in ");
-				builder.append(encoding);
+				builder.append(getEncoding());
 				builder.append(":");
 				builder.append("\n");
 				for (Entry<String, String> entry : filesInError.entrySet()) {
@@ -109,7 +117,7 @@ public class EncodingRule implements EnforcerRule {
 	 */
 	public String getCacheId() {
 		// no hash on boolean...only parameter so no hash is needed.
-		return "" + this.directory + this.includes;
+		return "" + this.getDirectory() + this.getIncludes();
 	}
 
 	/**
@@ -133,5 +141,29 @@ public class EncodingRule implements EnforcerRule {
 	 */
 	public boolean isResultValid(EnforcerRule arg0) {
 		return false;
+	}
+
+	public String getDirectory() {
+		return directory;
+	}
+
+	public void setDirectory(String directory) {
+		this.directory = directory;
+	}
+
+	public String getIncludes() {
+		return includes;
+	}
+
+	public void setIncludes(String includes) {
+		this.includes = includes;
+	}
+
+	public String getEncoding() {
+		return encoding;
+	}
+
+	public void setEncoding(String encoding) {
+		this.encoding = encoding;
 	}
 }

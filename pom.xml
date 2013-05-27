@@ -6,9 +6,9 @@
 	<packaging>jar</packaging>
 	<version>1.0</version>
 	<name>File Encoding Enforcer</name>
-	<description>This fule forces all files to be encoded using utf-8.</description>
+	<description>This rule forces all files to be encoded using the specified encoding.</description>
 	<properties>
-	  	<api.version>1.0-beta-1</api.version>
+	  	<api.version>1.2</api.version>
 	  	<maven.version>2.2.1</maven.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
@@ -17,6 +17,19 @@
 			<groupId>org.apache.maven.enforcer</groupId>
 			<artifactId>enforcer-api</artifactId>
 			<version>${api.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.maven.enforcer</groupId>
+			<artifactId>enforcer-rules</artifactId>
+			<version>${api.version}</version>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.maven.enforcer</groupId>
+			<artifactId>enforcer-rules</artifactId>
+			<version>${api.version}</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
@@ -46,7 +59,7 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>3.8.1</version>
+			<version>4.5</version>
 			<scope>test</scope>
 		</dependency>	
 		<dependency>
