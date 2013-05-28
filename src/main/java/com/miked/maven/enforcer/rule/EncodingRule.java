@@ -2,9 +2,7 @@ package com.miked.maven.enforcer.rule;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -12,6 +10,7 @@ import java.util.Map.Entry;
 import org.apache.maven.enforcer.rule.api.EnforcerRule;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleHelper;
+import org.apache.maven.plugin.logging.Log;
 import org.codehaus.plexus.component.configurator.expression.ExpressionEvaluationException;
 import org.mozilla.universalchardet.UniversalDetector;
 
@@ -32,7 +31,7 @@ public class EncodingRule implements EnforcerRule {
 	 * Regular Expression to match file names against
 	 */
 	private String includes = "";
-
+	
 	/**
 	 * Validate files match this encoding. If not specified then default to
 	 * ${project.builder.sourceEncoding}.
@@ -41,7 +40,7 @@ public class EncodingRule implements EnforcerRule {
 
 	public void execute(EnforcerRuleHelper helper) throws EnforcerRuleException {
 		try {
-			if (this.getEncoding() == null) {
+			if (this.getEncoding() == null || this.getEncoding().trim().length() == 0) {
 				this.setEncoding((String) helper
 					.evaluate("${project.build.sourceEncoding}"));
 			}
@@ -57,7 +56,7 @@ public class EncodingRule implements EnforcerRule {
 			Map<String, String> filesInError = new HashMap<String, String>();
 			String fileEncoding = null;
 			for (File file : files) {
-				fileEncoding = getEncoding(file);
+				fileEncoding = getEncoding(file, helper.getLog());
 				if (fileEncoding != null && !fileEncoding.equals(getEncoding())) {
 					filesInError.put(file.getName(), fileEncoding);
 				}
@@ -82,7 +81,7 @@ public class EncodingRule implements EnforcerRule {
 		}
 	}
 
-	protected String getEncoding(File file) {
+	protected String getEncoding(File file, Log log) {
 		byte[] buf = new byte[4096];
 		FileInputStream fis = null;
 		try {
@@ -96,10 +95,14 @@ public class EncodingRule implements EnforcerRule {
 			String encoding = detector.getDetectedCharset();
 			detector.reset();
 			return encoding;
-		} catch (FileNotFoundException e) {
-			// TODO
-		} catch (IOException e) {
-			// TODO
+		} catch (Exception e) {
+			log.warn("Unable to detect encoding for file: " + file.getName() + " due to: " + e.toString());
+		} finally {
+			if ( fis != null ) {
+				try { 
+					fis.close();
+				} catch (Exception e) {}
+			}
 		}
 		return null;
 	}

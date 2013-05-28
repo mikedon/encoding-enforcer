@@ -4,7 +4,7 @@ Maven Enforcer Plugin custom rule for enforcing file encodings.
 
 To Install :
 
-1.  git pull https://github.com/mikedon/encoding-enforcer.git
+1.  git clone https://github.com/mikedon/encoding-enforcer.git
 
 2.  cd encoding-enforcer
 
@@ -44,6 +44,8 @@ Example Usage:
 			            	<directory>relative/path</directory>
 							<!-- Regular expression to match file names against -->
 			            	<includes>.*\.properties</includes>
+			            	<!-- Validate files match this encoding. -->
+			            	<encoding>UTF-8</encoding>
 			            </encodingRule>
           			</rules>
 				</configuration>
