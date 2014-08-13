@@ -6,7 +6,7 @@ import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
 import org.apache.maven.plugins.enforcer.EnforcerTestUtils;
 import org.junit.Test;
 
-public class EncodingRuleTest {
+public class RequireEncodingTest {
 
 	@Test
 	public void testValidFile() {
@@ -25,10 +25,9 @@ public class EncodingRuleTest {
 
 	protected void testFile(boolean expected, String encoding, String file) {
 		boolean isValid;
-		EncodingRule rule = new EncodingRule();
+		RequireEncoding rule = new RequireEncoding();
 		rule.setEncoding(encoding);
-		rule.setDirectory("/src/test/resources/");
-		rule.setIncludes(file);
+		rule.setIncludes("src/test/resources/" + file);
 		try {
 			rule.execute(EnforcerTestUtils.getHelper());
 			isValid = true;

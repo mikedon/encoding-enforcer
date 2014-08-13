@@ -1,17 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+		xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+
 	<groupId>com.miked</groupId>
 	<artifactId>encoding-enforcer</artifactId>
 	<packaging>jar</packaging>
-	<version>1.0</version>
-	<name>File Encoding Enforcer</name>
+	<version>2.0</version>
+	
+	<name>File Encoding Enforcer Rule</name>
 	<description>This rule forces all files to be encoded using the specified encoding.</description>
+	
 	<properties>
-	  	<api.version>1.2</api.version>
-	  	<maven.version>2.2.1</maven.version>
+		<api.version>1.2</api.version>
+		<maven.version>2.2.1</maven.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
+	
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.maven.enforcer</groupId>
@@ -52,16 +57,11 @@
 			<version>${maven.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.codehaus.plexus</groupId>
-			<artifactId>plexus-container-default</artifactId>
-			<version>1.0-alpha-9</version>
-		</dependency>
-		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.5</version>
+			<version>4.11</version>
 			<scope>test</scope>
-		</dependency>	
+		</dependency>
 		<dependency>
 			<groupId>com.googlecode.juniversalchardet</groupId>
 			<artifactId>juniversalchardet</artifactId>
@@ -81,5 +81,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
 </project>

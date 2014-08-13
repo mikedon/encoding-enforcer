@@ -2,91 +2,92 @@ package com.miked.maven.enforcer.rule;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FilenameFilter;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.maven.enforcer.rule.api.EnforcerRule;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleHelper;
 import org.apache.maven.plugin.logging.Log;
 import org.codehaus.plexus.component.configurator.expression.ExpressionEvaluationException;
+import org.codehaus.plexus.util.DirectoryScanner;
+import org.codehaus.plexus.util.IOUtil;
+import org.codehaus.plexus.util.StringUtils;
 import org.mozilla.universalchardet.UniversalDetector;
 
 /**
  * Checks file encodings to see if they match the project.build.sourceEncoding
- * 
+ *
  * If file encoding can not be determined it is skipped.
- * 
- * @author miked
+ *
+ * @see https://github.com/mikedon/encoding-enforcer
  */
-public class EncodingRule implements EnforcerRule {
-	/**
-	 * Directory to search for files
-	 */
-	private String directory = "";
-
-	/**
-	 * Regular Expression to match file names against
-	 */
-	private String includes = "";
-	
+public class RequireEncoding implements EnforcerRule {
 	/**
 	 * Validate files match this encoding. If not specified then default to
 	 * ${project.builder.sourceEncoding}.
 	 */
 	private String encoding = "";
 
+	/**
+	 * Comma (or pipe) separated list of globs do incluide.
+	 */
+	private String includes = "";
+
+	/**
+	 * Comma (or pipe) separated list of globs do exclude.
+	 */
+	private String excludes = "";
+
+	/**
+	 * Enables SCM files exclusions. Enabled by default.
+	 */
+	private boolean useDefaultExcludes = true;
+
 	public void execute(EnforcerRuleHelper helper) throws EnforcerRuleException {
 		try {
-			if (this.getEncoding() == null || this.getEncoding().trim().length() == 0) {
-				this.setEncoding((String) helper
-					.evaluate("${project.build.sourceEncoding}"));
+			if (StringUtils.isBlank(encoding)) {
+				encoding = (String) helper.evaluate("${project.build.sourceEncoding}");
 			}
-
-			String target = (String) helper.evaluate("${basedir}");
-			File dir = new File(target + System.getProperty("file.separator")
-					+ getDirectory());
-			File[] files = dir.listFiles(new FilenameFilter() {
-				public boolean accept(File dir, String name) {
-					return name.matches(getIncludes());
+			String basedir = (String) helper.evaluate("${basedir}");
+			DirectoryScanner ds = new DirectoryScanner();
+			ds.setBasedir(basedir);
+			if (StringUtils.isNotBlank(includes)) {
+				ds.setIncludes(includes.split("[,\\|]"));
+			}
+			if (StringUtils.isNotBlank(excludes)) {
+				ds.setExcludes(excludes.split("[,\\|]"));
+			}
+			if (useDefaultExcludes) {
+				ds.addDefaultExcludes();
+			}
+			ds.scan();
+			Log log = helper.getLog();
+			StringBuilder filesInMsg = new StringBuilder();
+			for (String file : ds.getIncludedFiles()) {
+				String fileEncoding = getEncoding(new File(basedir, file), log);
+				if (log.isDebugEnabled()) {
+					log.debug(file + "==>" + fileEncoding);
 				}
-			});
-			Map<String, String> filesInError = new HashMap<String, String>();
-			String fileEncoding = null;
-			for (File file : files) {
-				fileEncoding = getEncoding(file, helper.getLog());
-				if (fileEncoding != null && !fileEncoding.equals(getEncoding())) {
-					filesInError.put(file.getName(), fileEncoding);
+				if (fileEncoding != null && !fileEncoding.equals(encoding)) {
+					filesInMsg.append(file);
+					filesInMsg.append("==>");
+					filesInMsg.append(fileEncoding);
+					filesInMsg.append("\n");
 				}
 			}
-			if (!filesInError.isEmpty()) {
-				StringBuilder builder = new StringBuilder();
-				builder.append("Files not encoded in ");
-				builder.append(getEncoding());
-				builder.append(":");
-				builder.append("\n");
-				for (Entry<String, String> entry : filesInError.entrySet()) {
-					builder.append(entry.getKey());
-					builder.append("==>");
-					builder.append(entry.getValue());
-					builder.append("\n");
-				}
-				throw new EnforcerRuleException(builder.toString());
+			if (filesInMsg.length() > 0) {
+				throw new EnforcerRuleException("Files not encoded in " + encoding + ":\n" + filesInMsg);
 			}
 		} catch (ExpressionEvaluationException e) {
-			throw new EnforcerRuleException("Unable to lookup an expression "
-					+ e.getLocalizedMessage(), e);
+			throw new EnforcerRuleException("Unable to lookup an expression " + e.getLocalizedMessage(), e);
 		}
 	}
 
 	protected String getEncoding(File file, Log log) {
-		byte[] buf = new byte[4096];
 		FileInputStream fis = null;
 		try {
 			fis = new FileInputStream(file);
 			UniversalDetector detector = new UniversalDetector(null);
+			byte[] buf = new byte[4096];
 			int nread;
 			while ((nread = fis.read(buf)) > 0 && !detector.isDone()) {
 				detector.handleData(buf, 0, nread);
@@ -96,13 +97,9 @@ public class EncodingRule implements EnforcerRule {
 			detector.reset();
 			return encoding;
 		} catch (Exception e) {
-			log.warn("Unable to detect encoding for file: " + file.getName() + " due to: " + e.toString());
+			log.warn("Unable to detect encoding for file: " + file + " due to: " + e);
 		} finally {
-			if ( fis != null ) {
-				try { 
-					fis.close();
-				} catch (Exception e) {}
-			}
+			IOUtil.close(fis);
 		}
 		return null;
 	}
@@ -111,16 +108,15 @@ public class EncodingRule implements EnforcerRule {
 	 * If your rule is cacheable, you must return a unique id when parameters or
 	 * conditions change that would cause the result to be different. Multiple
 	 * cached results are stored based on their id.
-	 * 
+	 *
 	 * The easiest way to do this is to return a hash computed from the values
 	 * of your parameters.
-	 * 
+	 *
 	 * If your rule is not cacheable, then the result here is not important, you
 	 * may return anything.
 	 */
 	public String getCacheId() {
-		// no hash on boolean...only parameter so no hash is needed.
-		return "" + this.getDirectory() + this.getIncludes();
+		return null;
 	}
 
 	/**
@@ -142,16 +138,16 @@ public class EncodingRule implements EnforcerRule {
 	 * queried. You may for example, store certain objects in your rule and then
 	 * query them later.
 	 */
-	public boolean isResultValid(EnforcerRule arg0) {
+	public boolean isResultValid(EnforcerRule cachedRule) {
 		return false;
 	}
 
-	public String getDirectory() {
-		return directory;
+	public String getEncoding() {
+		return encoding;
 	}
 
-	public void setDirectory(String directory) {
-		this.directory = directory;
+	public void setEncoding(String encoding) {
+		this.encoding = encoding;
 	}
 
 	public String getIncludes() {
@@ -162,11 +158,19 @@ public class EncodingRule implements EnforcerRule {
 		this.includes = includes;
 	}
 
-	public String getEncoding() {
-		return encoding;
+	public String getExcludes() {
+		return excludes;
 	}
 
-	public void setEncoding(String encoding) {
-		this.encoding = encoding;
+	public void setExcludes(String excludes) {
+		this.excludes = excludes;
+	}
+
+	public boolean isUseDefaultExcludes() {
+		return useDefaultExcludes;
+	}
+
+	public void setUseDefaultExcludes(boolean useDefaultExcludes) {
+		this.useDefaultExcludes = useDefaultExcludes;
 	}
 }
