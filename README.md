@@ -1,3 +1,8 @@
+DEPRECATED
+==========
+
+Prefer [Require Encoding](http://www.mojohaus.org/extra-enforcer-rules/requireEncoding.html) from [Mojohaus' Extra Enforcer Rules](http://www.mojohaus.org/extra-enforcer-rules/).
+
 Encode Enforcer
 ===============
 
